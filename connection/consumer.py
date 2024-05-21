@@ -15,15 +15,17 @@ async def wait_response(id):
         await asyncio.sleep(1)
 
 
-def consumer_job(config):
+def consumer_job(_, config):
     consumer = Consumer(config)
     topics = ['connection']
-    consumer.subcribe(topics)
+    consumer.subscribe(topics)
 
     try:
         while True:
             msg = consumer.poll(1.0)
-            if msg.error():
+            if not msg:
+                continue
+            elif msg.error():
                 if msg.error().code() == KafkaError._PARTITION_EOF:
                     continue
                 else:
@@ -43,19 +45,14 @@ def consumer_job(config):
         consumer.close()
 
 
-def start_consumer(config, responses_queue = None, responses_dict = None):
+def start_consumer(args, config = None, responses_queue = None, responses_dict = None):
     global _responses_queue, _responses_dict
     _responses_dict = responses_dict
     _responses_queue = responses_queue
-    Thread(target=lambda: consumer_job(config)).start()
+    Thread(target=lambda: consumer_job(args, config)).start()
 
 
 if __name__ == "__main__":
-
-    consumer_config = {
-        'bootstrap.servers': 'localhost:9092',
-        'auto.offset.reset': 'earliest'
-    }    
-    start_consumer(consumer_config)
+    start_consumer()
 
 

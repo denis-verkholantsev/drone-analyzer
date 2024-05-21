@@ -1,11 +1,13 @@
 from fastapi import FastAPI
-from connection.contracts import PostOrderRequestBody, OrderInfo
+from contracts import PostOrderRequestBody, OrderInfo
 from multiprocessing import Queue
 from threading import Thread
 from uuid import uuid4, UUID
 from dataclasses import asdict
-from connection.producer import proceed_to_deliver
-from connection.consumer import wait_response
+from producer import proceed_to_deliver
+from consumer import wait_response
+import uvicorn
+import json
 
 app = FastAPI()
 host = "0.0.0.0"
@@ -18,11 +20,11 @@ async def post_order(body: PostOrderRequestBody, ):
     proceed_to_deliver(id, order)
     response = await wait_response(id)
 
-    return response
+    return json.dumps({'r': response, 'd': id})
 
 
 def start_rest():
-    Thread(target=lambda: app.run(host=host, port=port, debug=True)).start()
+    Thread(target=lambda: uvicorn.run(app, host=host, port=port, log_level='info')).start()
     
 
 if __name__ == "__main__":
