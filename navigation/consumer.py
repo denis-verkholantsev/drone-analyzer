@@ -3,22 +3,18 @@ from confluent_kafka import Consumer, KafkaError
 import asyncio
 from multiprocessing import Queue
 import json
+from location import Location
+from handler import handle_event
 
 _responses_dict: dict = None
 _responses_queue: Queue = None
+_location: Location = None
 
 
-async def wait_response(id):
-    loop = asyncio.get_event_loop()
-    while True:
-        if id in _responses_dict:
-            return _responses_dict.get(id)
-        await asyncio.sleep(1)
-
-
-def consumer_job(_, config):
+async def consumer_job(_, config):
+    global _location
+    topics = ['central-system']
     consumer = Consumer(config)
-    topics = ['connection']
     consumer.subscribe(topics)
 
     try:
@@ -36,8 +32,7 @@ def consumer_job(_, config):
                 try:
                     id = msg.key().decode('utf-8')
                     details = json.loads(msg.value().decode('utf-8'))
-                    _responses_dict[id] = details
-                    _responses_queue.put(id)
+                    await handle_event(id, details, _location)
                 except Exception as e:
                     print(f"[error] malformed event received from topic {topics[0]}: {msg.value()}. {e}")
     except KeyboardInterrupt:
@@ -50,6 +45,7 @@ def start_consumer(args, config = None, responses_queue = None, responses_dict =
     global _responses_queue, _responses_dict
     _responses_dict = responses_dict
     _responses_queue = responses_queue
+    _location = Location(latitude=0, longitude=0)
     Thread(target=lambda: consumer_job(args, config)).start()
 
 

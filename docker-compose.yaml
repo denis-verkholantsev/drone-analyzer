@@ -1,10 +1,11 @@
 version: '3'
-
+  
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper
+    image: confluentinc/cp-zookeeper:7.2.0
     container_name: zookeeper
     hostname: zookeeper
+    restart: always
     ports:
       - "2181:2181"
     environment:
@@ -13,36 +14,39 @@ services:
 
     healthcheck:
       test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
-      interval: 5s
-      timeout: 2s
+      interval: 10s
+      timeout: 30s
       retries: 5
 
+
   kafka:
-    image: confluentinc/cp-kafka
+    image: confluentinc/cp-kafka:7.2.0
     container_name: kafka
     hostname: kafka
+    restart: always
     ports:
       - "9092:9092"
     depends_on:
-      zookeeper:
-        condition: service_healthy
-        restart: true
+      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" 
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "9092"]
       interval: 5s
-      timeout: 2s
+      timeout: 20s
       retries: 5
-
+      
   connection:
     image: connection
     container_name: connection
+    restart: always
     build:
       context: .
       dockerfile: ./Dockerfile.connection
@@ -52,3 +56,130 @@ services:
         restart: true
     ports:
       - "5001:5001"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "5001"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  central_system:
+    image: central_system
+    container_name: central_system
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.central_system
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5002:5002"
+
+  scheduler:
+    image: scheduler
+    container_name: scheduler
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.scheduler
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5003:5003"
+    
+  navigation:
+    image: navigation
+    container_name: navigation
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.navigation
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5004:5004"
+
+  monitor_gps:
+    image: monitor_gps
+    container_name: monitor_gps
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.monitor_gps
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5008:5008"
+
+  monitor_drive:
+    image: monitor_drive
+    container_name: monitor_drive
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.monitor_drive
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5005:5005"
+
+  drive:
+    image: drive
+    container_name: drive
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.drive
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5006:5006"
+
+  gps:
+    image: gps
+    container_name: gps
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.gps
+    depends_on:
+      kafka:
+        condition: service_healthy
+        restart: true
+      connection:
+        condition: service_started
+        restart: true
+    ports:
+      - "5007:5007"
+
+
+    

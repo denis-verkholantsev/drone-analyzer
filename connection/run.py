@@ -15,7 +15,7 @@ if __name__ == "__main__":
     config_parser = ConfigParser()
     config_parser.read_file(args.config_file)
     config = dict(config_parser['default'])
-    config.update(config_parser['connection-consumer'])
+    config.update(config_parser['connection'])
 
     start_rest()
     start_connection(args, config)

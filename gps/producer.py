@@ -4,15 +4,15 @@ from threading import Thread
 from confluent_kafka import Producer
 from dataclasses import asdict
 import json
-from policies import check_policies
+from uuid import uuid4
 
 _requests_queue: Queue = None
 _requests_dict: dict = None
 
 
 def proceed_to_deliver(id, details):
-    _requests_queue.put(id)
-    _requests_dict[id] = details
+    _requests_queue.put(uuid4())
+    _requests_dict[id] = json.dumps({'latitude': 45.086, 'longitude': 23.88, 'response': 'OK'})
 
 
 def producer_job(_,config):
@@ -27,16 +27,8 @@ def producer_job(_,config):
         details = _requests_dict.get(id)
         if details is None:
             continue
-        if not check_policies(details):
-            details['response'] = 'bad_response'
-            topic = 'central-system'
         
-        if details['deliver_from'] == 'navigation':
-            topic = 'drive'
-        if details['deliver_from'] == 'drive':
-            topic = 'central-system'
-        
-        producer.produce(topic, value=json.dumps(details), key=id, callback=delivery_callback)
+        producer.produce('monitor-gps', value=details, key=id, callback=delivery_callback)
         producer.poll(10)
         producer.flush()
 

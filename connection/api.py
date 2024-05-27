@@ -20,7 +20,7 @@ async def post_order(body: PostOrderRequestBody, ):
     proceed_to_deliver(id, order)
     response = await wait_response(id)
 
-    return json.dumps({'r': response, 'd': id})
+    return json.dumps({'r': response})
 
 
 def start_rest():

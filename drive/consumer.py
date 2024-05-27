@@ -2,7 +2,9 @@ from threading import Thread
 from confluent_kafka import Consumer, KafkaError
 import asyncio
 from multiprocessing import Queue
+from producer import proceed_to_deliver
 import json
+from handler import handle_event
 
 _responses_dict: dict = None
 _responses_queue: Queue = None
@@ -17,8 +19,8 @@ async def wait_response(id):
 
 
 def consumer_job(_, config):
+    topics = ['monitor-drive']
     consumer = Consumer(config)
-    topics = ['connection']
     consumer.subscribe(topics)
 
     try:
@@ -36,8 +38,8 @@ def consumer_job(_, config):
                 try:
                     id = msg.key().decode('utf-8')
                     details = json.loads(msg.value().decode('utf-8'))
-                    _responses_dict[id] = details
-                    _responses_queue.put(id)
+                    handle_event(id, details)
+                    proceed_to_deliver(id, details)
                 except Exception as e:
                     print(f"[error] malformed event received from topic {topics[0]}: {msg.value()}. {e}")
     except KeyboardInterrupt:

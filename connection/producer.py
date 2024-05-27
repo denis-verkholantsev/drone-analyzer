@@ -2,35 +2,44 @@ from multiprocessing import Queue
 from random import choice
 from threading import Thread
 from confluent_kafka import Producer
-from dataclasses import asdict
 import json
+from checks import check
 
 _requests_queue: Queue = None
 _requests_dict: dict = None
 
 
-def proceed_to_deliver(id, order):
+def proceed_to_deliver(id, details):
     _requests_queue.put(id)
-    _requests_dict[id] = order
+    _requests_dict[id] = details
 
 
-def producer_job(_, config):
+def producer_job(_,config):
     producer = Producer(config)
 
     def delivery_callback(err, msg):
         if err:
             print(f'[error] Message failed delivery: {err}')
 
-    topic = 'connection'
+    topic = 'central-system'
 
     while True:
         id = _requests_queue.get()
-        order = _requests_dict.get(id)
-        if order is None:
+        details = _requests_dict.get(id)
+        if details is None:
             continue
-        producer.produce(topic, value=json.dumps(order.__dict__), key=id, callback=delivery_callback)
         
-        producer.poll(10000)
+        details_dict = details.__dict__
+        details_dict['deliver_from'] = 'connection'
+        details_dict['deliver_to'] = 'scheduler'
+
+        if not check(details):
+            details_dict['response'] = 'bad task'
+            producer.produce('connection', value=json.dumps(details_dict), key=id, callback=delivery_callback)
+            continue
+
+        producer.produce(topic, value=json.dumps(details_dict), key=id, callback=delivery_callback)
+        producer.poll(10)
         producer.flush()
 
 
