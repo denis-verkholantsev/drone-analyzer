@@ -25,7 +25,7 @@ def producer_job(_,config):
 
     while True:
         id = _requests_queue.get()
-        details = _requests_dict.get(id)
+        details = _requests_dict.pop(id, None)
         if details is None:
             continue
         
@@ -37,9 +37,10 @@ def producer_job(_,config):
             details_dict['response'] = 'bad task'
             producer.produce('connection', value=json.dumps(details_dict), key=id, callback=delivery_callback)
             continue
-
+        
         producer.produce(topic, value=json.dumps(details_dict), key=id, callback=delivery_callback)
-        producer.poll(10)
+        # print(f'---------from connection to {details_dict['deliver_to']}----------')
+        producer.poll(10000)
         producer.flush()
 
 

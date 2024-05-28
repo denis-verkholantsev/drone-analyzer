@@ -11,9 +11,9 @@ _responses_queue: Queue = None
 _location: Location = None
 
 
-async def consumer_job(_, config):
+def consumer_job(_, config):
     global _location
-    topics = ['central-system']
+    topics = ['navigation']
     consumer = Consumer(config)
     consumer.subscribe(topics)
 
@@ -32,7 +32,9 @@ async def consumer_job(_, config):
                 try:
                     id = msg.key().decode('utf-8')
                     details = json.loads(msg.value().decode('utf-8'))
-                    await handle_event(id, details, _location)
+                    _responses_queue.put(id)
+                    _responses_dict[id] = details
+                    handle_event(id, details, _location, _responses_dict)
                 except Exception as e:
                     print(f"[error] malformed event received from topic {topics[0]}: {msg.value()}. {e}")
     except KeyboardInterrupt:
@@ -43,6 +45,7 @@ async def consumer_job(_, config):
 
 def start_consumer(args, config = None, responses_queue = None, responses_dict = None):
     global _responses_queue, _responses_dict
+    global _location
     _responses_dict = responses_dict
     _responses_queue = responses_queue
     _location = Location(latitude=0, longitude=0)

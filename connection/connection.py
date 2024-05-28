@@ -13,9 +13,20 @@ def start_connection(args=None, config=None):
     _requests_dict: dict[UUID, OrderInfo] = {}
 
     admin = AdminClient(config)
-    admin.create_topics([NewTopic('connection'), NewTopic('central-system')])
-    start_consumer(args, config, _responses_queue, _responses_dict)
+    admin.create_topics([NewTopic('connection'),
+                         NewTopic('central-system'),
+                        NewTopic("monitor-drive"),
+                        NewTopic("monitor-battery"),
+                        NewTopic("monitor-computer-vision"),
+                        NewTopic("monitor-lidar"),
+                        NewTopic("monitor-gps"),
+                        NewTopic("scheduler"),
+                        NewTopic("navigation"),
+                        NewTopic("emergency-landing"),
+                        NewTopic("gps"),
+                        NewTopic('drive')])
     start_producer(args, config, _requests_queue, _requests_dict)
+    start_consumer(args, config, _responses_queue, _responses_dict)
 
 if __name__ == "__main__":
     start_connection()

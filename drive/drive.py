@@ -21,11 +21,18 @@ def start_drive(args=None, config=None):
     config.update(config_parser["drive"])
 
     admin = AdminClient(config)
-    admin.create_topics(
-        [
-            NewTopic("drive"),
-        ]
-    )
+    admin.create_topics([NewTopic('connection'),
+                         NewTopic('central-system'),
+                        NewTopic("monitor-drive"),
+                        NewTopic("monitor-battery"),
+                        NewTopic("monitor-computer-vision"),
+                        NewTopic("monitor-lidar"),
+                        NewTopic("monitor-gps"),
+                        NewTopic("scheduler"),
+                        NewTopic("navigation"),
+                        NewTopic("emergency-landing"),
+                        NewTopic("gps"),
+                        NewTopic('drive')])
 
     _requests_queue: Queue = Queue(1000)
     _responses_queue: Queue = Queue(1000)

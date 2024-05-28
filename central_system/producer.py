@@ -1,5 +1,5 @@
-from multiprocessing import Queue
 from random import choice
+from multiprocessing import Queue
 from threading import Thread
 from confluent_kafka import Producer
 from dataclasses import asdict
@@ -23,7 +23,7 @@ redirect = {
     'scheduler': 'scheduler',
     'emergency-landing': 'emergency-landing',
     'central-system': 'central-system',
-}
+} 
 
 
 def proceed_to_deliver(id, details):
@@ -40,13 +40,15 @@ def producer_job(_,config):
     
     while True:
         id = _requests_queue.get()
-        details = _requests_dict.get(id)
+        details = _requests_dict.pop(id, None)
         if details is None:
             continue
         
-        handle_event(details)
+        if details['deliver_to'] == 'central-system' and details['deliver_from'] == 'scheduler' and details.get('response'):
+            details['deliver_from'] == 'central-system'
+            details['deliver_to'] == 'connection'
         producer.produce(redirect[details['deliver_to']], value=json.dumps(details), key=id, callback=delivery_callback)
-        producer.poll(10)
+        producer.poll(10000)
         producer.flush()
 
 

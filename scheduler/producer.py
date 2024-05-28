@@ -34,8 +34,7 @@ def producer_job(_,config):
             details['deliver_to'] = 'navigation'
         details['deliver_from'] = 'scheduler'
         producer.produce(topic, value=json.dumps(details), key=id, callback=delivery_callback)
-
-        producer.poll(10)
+        producer.poll(10000)
         producer.flush()
 
 

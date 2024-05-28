@@ -29,7 +29,8 @@ def producer_job(_,config):
             continue
         
         producer.produce('central-system', value=details, key=id, callback=delivery_callback)
-        producer.poll(10)
+        print('------from gps to central system------------')
+        producer.poll(10000)
         producer.flush()
 
 

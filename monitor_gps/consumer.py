@@ -38,7 +38,7 @@ def consumer_job(_, config):
                 try:
                     id = msg.key().decode('utf-8')
                     details = json.loads(msg.value().decode('utf-8'))
-                    if not check_policies():
+                    if not check_policies(details):
                         details['response'] == 'bad response'
                         
                     proceed_to_deliver(id, details)

@@ -18,7 +18,7 @@ async def post_order(body: PostOrderRequestBody, ):
     order: OrderInfo = body.to_order_info()
     id = str(uuid4())
     proceed_to_deliver(id, order)
-    response = await wait_response(id)
+    response = wait_response(id)
 
     return json.dumps({'r': response})
 

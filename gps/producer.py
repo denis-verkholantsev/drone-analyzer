@@ -12,7 +12,7 @@ _requests_dict: dict = None
 
 def proceed_to_deliver(id, details):
     _requests_queue.put(uuid4())
-    _requests_dict[id] = json.dumps({'latitude': 45.086, 'longitude': 23.88, 'response': 'OK'})
+    _requests_dict[id] = json.dumps({'deliver_from': 'gps', 'deliver_to': 'navigation', 'latitude': '45.086', 'longitude': '23.88', 'response': 'OK'})
 
 
 def producer_job(_,config):
@@ -29,7 +29,7 @@ def producer_job(_,config):
             continue
         
         producer.produce('monitor-gps', value=details, key=id, callback=delivery_callback)
-        producer.poll(10)
+        producer.poll(10000)
         producer.flush()
 
 
@@ -41,4 +41,4 @@ def start_producer(args, config = None, requests_queue=None, requests_dict=None)
     
 
 if __name__ == '__main__':
-    start_producer()    
+    start_producer()

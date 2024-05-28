@@ -17,7 +17,7 @@ def start_scheduler(args=None, config=None):
     config_parser = ConfigParser()
     config_parser.read_file(args.config_file)
     config = dict(config_parser["default"])
-    config.update(config_parser["central-system"])
+    config.update(config_parser["scheduler"])
     _requests_queue: Queue = Queue(1000)
     _responses_queue: Queue = Queue(1000)
     _responses_dict: dict[UUID, str] = {}

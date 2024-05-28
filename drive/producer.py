@@ -31,6 +31,7 @@ def producer_job(_,config):
         details['deliver_to'] = 'navigation'
         details['response'] == 'OK'
         producer.produce('monitor-drive', value=details, key=id, callback=delivery_callback)
+        print('------------from drive to navigation----------------')
         producer.poll(10)
         producer.flush()
 

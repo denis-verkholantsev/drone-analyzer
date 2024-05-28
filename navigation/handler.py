@@ -2,9 +2,9 @@ from execution_order import execute_order
 from producer import proceed_to_deliver
 
 
-async def handle_event(id, details, location, responses_dict):
+def handle_event(id, details, location, responses_dict):
     if details['deliver_from'] == 'scheduler':
-        response = await execute_order(id, details, location, responses_dict)
+        response = execute_order(id, details, location, responses_dict)
         if response == 'OK':
             details['deliver_to'] == 'scheduler'
             details['deliver_from'] == 'navigation'
@@ -13,8 +13,8 @@ async def handle_event(id, details, location, responses_dict):
         if 'response' not in details:
             return
         if details['response'] == 'OK':
-            location.latitude = details['response']['latitude']
-            location.longtitude = details['response']['longtitude']
+            location.latitude = details['latitude']
+            location.longtitude = details['longtitude']
         if details['response'] == 'bad response':
             return
     elif details['deliver_from'] == 'drive':

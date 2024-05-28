@@ -24,12 +24,13 @@ def producer_job(_,config):
 
     while True:
         id = _requests_queue.get()
-        details = _requests_dict.get(id)
+        details = _requests_dict.pop(id, None)
         if details is None:
             continue
 
-        producer.produce(topic, value=details, key=id, callback=delivery_callback)
-        producer.poll(10)
+        producer.produce(topic, value=json.dumps(details), key=id, callback=delivery_callback)
+        # print('---from navigation to central-system-----')
+        producer.poll(10000)
         producer.flush()
 
 

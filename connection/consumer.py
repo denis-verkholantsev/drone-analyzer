@@ -8,12 +8,10 @@ _responses_dict: dict = None
 _responses_queue: Queue = None
 
 
-async def wait_response(id):
-    loop = asyncio.get_event_loop()
+def wait_response(id):
     while True:
         if id in _responses_dict:
-            return _responses_dict.get(id)
-        await asyncio.sleep(1)
+            return _responses_dict.pop(id, None)
 
 
 def consumer_job(_, config):

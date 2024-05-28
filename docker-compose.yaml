@@ -15,7 +15,7 @@ services:
     healthcheck:
       test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
       interval: 10s
-      timeout: 30s
+      timeout: 20s
       retries: 5
 
 
@@ -27,7 +27,9 @@ services:
     ports:
       - "9092:9092"
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
+        restart: true
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -39,8 +41,8 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "9092"]
-      interval: 5s
-      timeout: 20s
+      interval: 10s
+      timeout: 40s
       retries: 5
       
   connection:
