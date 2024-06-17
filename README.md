@@ -3,7 +3,7 @@ In progress
 
 Реализация дрона-доставщика согласно концепции [Flask](https://os.kaspersky.ru/soczialnye-seti/flask/)
 ## Архитектура
-![Архитектура](architecture.png)
+![Архитектура](pics/architecture.png)
 
 ## Диаграмма последовательность
-![Диаграмма последовательности](seq_diagram.png)
+![Диаграмма последовательности](pics/seq_diagram.png)
